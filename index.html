@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Fútbol Retro Pixel</title>
+  <style>
+    body {
+      background: black;
+      margin: 0;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      margin: 0 auto;
+      background: #222;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="800" height="400"></canvas>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const paddleWidth = 10, paddleHeight = 80;
+    let leftPaddleY = 160;
+    let rightPaddleY = 160;
+
+    let ballX = canvas.width / 2;
+    let ballY = canvas.height / 2;
+    let ballRadius = 6;
+    let ballSpeedX = 5;
+    let ballSpeedY = 3;
+
+    const keys = {};
+
+    document.addEventListener("keydown", (e) => keys[e.key] = true);
+    document.addEventListener("keyup", (e) => keys[e.key] = false);
+
+    function drawPaddle(x, y) {
+      ctx.fillStyle = "#0f0";
+      ctx.fillRect(x, y, paddleWidth, paddleHeight);
+    }
+
+    function drawBall(x, y) {
+      ctx.fillStyle = "#f00";
+      ctx.beginPath();
+      ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function movePaddles() {
+      // Jugador 1 (W/S)
+      if (keys["w"] && leftPaddleY > 0) leftPaddleY -= 5;
+      if (keys["s"] && leftPaddleY < canvas.height - paddleHeight) leftPaddleY += 5;
+
+      // Jugador 2 (↑/↓)
+      if (keys["ArrowUp"] && rightPaddleY > 0) rightPaddleY -= 5;
+      if (keys["ArrowDown"] && rightPaddleY < canvas.height - paddleHeight) rightPaddleY += 5;
+    }
+
+    function moveBall() {
+      ballX += ballSpeedX;
+      ballY += ballSpeedY;
+
+      // Rebotar en el techo y piso
+      if (ballY < ballRadius || ballY > canvas.height - ballRadius) {
+        ballSpeedY *= -1;
+      }
+
+      // Colisión con paletas
+      if (
+        ballX - ballRadius < paddleWidth &&
+        ballY > leftPaddleY &&
+        ballY < leftPaddleY + paddleHeight
+      ) {
+        ballSpeedX *= -1;
+        ballX = paddleWidth + ballRadius;
+      }
+
+      if (
+        ballX + ballRadius > canvas.width - paddleWidth &&
+        ballY > rightPaddleY &&
+        ballY < rightPaddleY + paddleHeight
+      ) {
+        ballSpeedX *= -1;
+        ballX = canvas.width - paddleWidth - ballRadius;
+      }
+
+      // Reiniciar si se va la pelota
+      if (ballX < 0 || ballX > canvas.width) {
+        ballX = canvas.width / 2;
+        ballY = canvas.height / 2;
+        ballSpeedX *= -1;
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      movePaddles();
+      moveBall();
+
+      drawPaddle(0, leftPaddleY); // Jugador 1
+      drawPaddle(canvas.width - paddleWidth, rightPaddleY); // Jugador 2
+      drawBall(ballX, ballY);
+
+      requestAnimationFrame(draw);
+    }
+
+    draw();
+  </script>
+</body>
+</html>
